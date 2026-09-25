@@ -2,7 +2,7 @@
   "id": "pocket.shop.bot.app",
   "name": "PocketShop Bot",
   "version": "1.0.0",
-  "description": "Децентрализованный Web3-магазин с интерфейсом Telegram-бота, CRM-системой и 3-уровневой реферальной программой со скидками.",
+  "description": "Децентрализованный Web3-магазин самых нужных цифровых товаров с интерфейсом Telegram-бота.",
   "author": "PDtbxHoMvkxT2QzogMN67LjGc1xpuEsrrZ",
   "permissions": ["account", "notifications", "messaging", "payment", "sign", "camera", "gallery"]
 }
