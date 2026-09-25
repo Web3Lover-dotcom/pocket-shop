@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "description": "Децентрализованный Web3-магазин с интерфейсом Telegram-бота, CRM-системой и 3-уровневой реферальной программой со скидками.",
   "author": "PDtbxHoMvkxT2QzogMN67LjGc1xpuEsrrZ",
-  "permissions": [
+  "permissions": ["account", "notifications", "messaging", "payment", "sign", "camera", "gallery"]
+}
     "account",
     "payment",
     "chat",
