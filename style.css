@@ -1,0 +1,308 @@
+/* ОБЩИЕ СТИЛИ СИСТЕМЫ */
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #050508; /* Глубокий космический черный */
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ШАПКА "БОТА" */
+.bot-header {
+    background-color: #0c0d14;
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #1a1c29;
+    justify-content: space-between;
+}
+.bot-avatar {
+    width: 40px;
+    height: 40px;
+    background: #1f2235;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-right: 12px;
+    border: 1px solid rgba(0, 242, 254, 0.3);
+}
+.bot-info {
+    flex: 1;
+}
+.bot-name { font-weight: bold; font-size: 16px; color: #ffffff; }
+.bot-status { color: #00f2fe; font-size: 13px; margin-top: 2px; text-shadow: 0 0 5px rgba(0, 242, 254, 0.3); }
+
+/* КНОПКА ШЕСТЕРЕНКИ В ШАПКЕ */
+.admin-toggle-btn {
+    background: #12131a;
+    border: 1px solid #9d4ede;
+    color: #9d4ede;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.admin-toggle-btn:hover {
+    background: #9d4ede;
+    color: #050508;
+    box-shadow: 0 0 10px #9d4ede;
+}
+
+/* ЭКРАН ЧАТА С НЕОНОВЫМ WEB3 ФОНОМ */
+.chat-container {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #050508;
+    /* Бесшовный фиолетово-бирюзовый Web3 неоновый паттерн */
+    background-image: url('https://freepik.com'); 
+    background-size: cover;
+    background-position: center;
+}
+
+/* ПУЗЫРИ СООБЩЕНИЙ */
+.msg {
+    max-width: 80%;
+    padding: 11px 15px;
+    border-radius: 14px;
+    font-size: 15px;
+    line-height: 1.45;
+    word-wrap: break-word;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+}
+
+/* Пузырь Бот-администратора (Графит с бирюзовой неоновой рамкой) */
+.msg.bot {
+    background-color: #0c0d14;
+    color: #ffffff;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    border: 1px solid rgba(0, 242, 254, 0.2); 
+}
+
+/* Пузырь Покупателя (Фиолетовый неон) */
+.msg.user {
+    background-color: #24113f;
+    color: #ffffff;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    border: 1px solid rgba(157, 78, 221, 0.3);
+}
+
+/* КНОПКИ МЕНЮ "БОТА" ВНИЗУ */
+.keyboard-container {
+    background-color: #0c0d14;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    border-top: 1px solid #1a1c29;
+}
+
+.tg-btn {
+    background: #12131a;
+    color: #00f2fe; /* Бирюзовый неон */
+    border: 1px solid #00f2fe;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+    text-shadow: 0 0 5px rgba(0, 242, 254, 0.5);
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.1);
+}
+.tg-btn:active, .tg-btn:hover {
+    background: #00f2fe;
+    color: #050508;
+    box-shadow: 0 0 15px #00f2fe;
+    text-shadow: none;
+}
+
+/* Кнопка оплаты/подтверждения (Зеленый неон) */
+.tg-btn.pay {
+    background: #06140d;
+    color: #39ff14; /* Кислотно-зеленый неон */
+    border: 1px solid #39ff14;
+    grid-column: span 2;
+    text-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
+    box-shadow: 0 0 10px rgba(57, 255, 20, 0.1);
+}
+.tg-btn.pay:active, .tg-btn.pay:hover {
+    background: #39ff14;
+    color: #050508;
+    box-shadow: 0 0 20px #39ff14;
+    text-shadow: none;
+}
+
+/* ВЫЕЗЖАЮЩАЯ ПАНЕЛЬ АДМИНИСТРАТОРА (CRM) */
+.admin-panel {
+    background-color: #0c0d14;
+    padding: 15px;
+    border-bottom: 2px solid #9d4ede;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 70vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+}
+.admin-panel h3 { margin: 0 0 5px 0; font-size: 16px; color: #9d4ede; text-transform: uppercase; letter-spacing: 0.5px; }
+.admin-panel h4 { margin: 5px 0; font-size: 13px; color: #7f91a4; }
+
+.admin-form { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px; 
+}
+.admin-panel input {
+    background-color: #12131a;
+    border: 1px solid #1a1c29;
+    color: white;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border 0.2s;
+}
+.admin-panel input:focus {
+    border-color: #9d4ede;
+    outline: none;
+}
+
+/* БЛОК АВТОМАТИЧЕСКОЙ АНАЛИТИКИ */
+.analytics-block {
+    background: #050508;
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid #9d4ede;
+}
+.analytics-block h4 { margin: 0 0 10px 0; color: #9d4ede; font-size: 13px; font-weight: bold; }
+
+.analytics-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.metrics-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+.metric-card {
+    background: #12131a;
+    padding: 8px;
+    border-radius: 6px;
+    text-align: center;
+    border: 1px solid #1a1c29;
+}
+.metric-card span { font-size: 11px; color: #7f91a4; display: block; margin-bottom: 2px; }
+.metric-card b { font-size: 14px; color: #39ff14; }
+
+/* СПИСОК ДЕТАЛЬНЫХ ПРОДАЖ ПО ТОВАРУ */
+.product-sales-list {
+    background: #12131a;
+    border-radius: 6px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border: 1px solid #1a1c29;
+}
+.product-sales-item {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px dashed #1a1c29;
+    padding-bottom: 4px;
+    font-size: 12px;
+}
+.product-sales-item:last-child { border: none; padding-bottom: 0; }
+
+/* ТАБЛИЦА ТОВАРОВ В АДМИНКЕ */
+.admin-prod-list {
+    max-height: 130px;
+    overflow-y: auto;
+    background: #050508;
+    border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border: 1px solid #1a1c29;
+}
+.admin-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #12131a;
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+/* КРАСНАЯ КНОПКА УДАЛЕНИЯ */
+.btn-delete {
+    background: #e53935;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+.btn-delete:hover { background: #b71c1c; }
+
+/* КНОПКА ПОЛНОЙ ОЧИСТКИ */
+.btn-danger {
+    background: transparent;
+    color: #e53935;
+    border: 1px solid #e53935;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: all 0.2s;
+}
+.btn-danger:hover {
+    background: rgba(229, 57, 53, 0.1);
+}
+
+/* ТАБЛИЦА С ОПЛАЧЕННЫМИ ЗАКАЗАМИ */
+.admin-orders-list {
+    max-height: 150px;
+    overflow-y: auto;
+    background: #050508;
+    border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border: 1px solid #39ff14;
+}
+.admin-order-row {
+    background: #12131a;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    border-left: 4px solid #39ff14;
+    line-height: 1.45;
+}
+.admin-order-row b {
+    color: #39ff14;
+    font-size: 14px;
+}
+

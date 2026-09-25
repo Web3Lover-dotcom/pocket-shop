@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web3 3-Level Ref Shop Bot</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Подключаем официальную библиотеку Bastyon SDK -->
+    <script src="https://bastyon.com"></script>
+</head>
+<body>
+
+    <!-- Шапка приложения-бота -->
+    <div class="bot-header">
+        <div class="bot-avatar">🤖</div>
+        <div class="bot-info">
+            <div class="bot-name">PocketShop Bot</div>
+            <div class="bot-status" id="botStatus">онлайн | Web3 Магазин</div>
+        </div>
+        <!-- Кнопка админ-панели (по умолчанию скрыта от обычных покупателей) -->
+        <button id="adminPanelBtn" class="admin-toggle-btn" style="display:none;" onclick="toggleAdminPanel()">⚙️ Админка</button>
+    </div>
+
+    <!-- Основной экран чата, где симулируется диалог с ботом -->
+    <div class="chat-container" id="chatContainer"></div>
+
+    <!-- Скрытая панель управления для Администратора (CRM + Аналитика) -->
+    <div class="admin-panel" id="adminPanel" style="display: none;">
+        <h3>🛠️ Панель администратора</h3>
+        
+        <!-- Блок автоматической настройки реф. процентов -->
+        <div class="analytics-block" style="margin-bottom: 10px; border-color: #31b54a;">
+            <h4 style="color: #31b54a;">⚙️ Настройка 3-уровневой реф. программы:</h4>
+            <div class="admin-form" style="flex-direction: row; align-items: center; justify-content: space-between;">
+                <label for="refPercentInput">Базовый реф. процент (1 уровень):</label>
+                <div style="display: flex; gap: 5px; align-items: center;">
+                    <input type="number" id="refPercentInput" min="0" max="50" style="width: 60px; padding: 5px;" placeholder="10">%
+                    <button class="tg-btn" style="padding: 6px 12px; font-size:12px;" onclick="saveRefPercentFromAdmin()">ОК</button>
+                </div>
+            </div>
+            <div style="font-size: 11px; color:#7f91a4; margin-top:5px; line-height: 1.3;">
+                * 2 уровень автоматически составит 1/2 от базового, 3 уровень — 1/4 от базового.
+            </div>
+        </div>
+
+        <!-- Блок визуальной аналитики продаж -->
+        <div class="analytics-block">
+            <h4>📊 Бизнес-аналитика магазина:</h4>
+            <div class="analytics-grid" id="adminAnalytics"></div>
+        </div>
+
+        <hr style="border-color: #1a1c29; margin: 12px 0;">
+        
+        <!-- Форма для быстрого добавления товаров -->
+        <h4>➕ Добавить новый товар:</h4>
+        <div class="admin-form">
+            <input type="text" id="prodName" placeholder="Название товара">
+            <input type="number" id="prodPrice" placeholder="Цена в PKOIN">
+            <input type="number" id="prodQty" placeholder="Количество (шт.)" min="1">
+            <button class="tg-btn pay" onclick="addNewProductFromAdmin()">💾 Сохранить товар</button>
+        </div>
+
+        <hr style="border-color: #1a1c29; margin: 12px 0;">
+
+        <!-- Склад: управление остатками и удаление позиций -->
+        <h4>📋 Управление товарами в наличии:</h4>
+        <div id="adminProductsList" class="admin-prod-list"></div>
+        <button class="btn-danger" onclick="clearAllCatalog()">🧹 Очистить весь каталог</button>
+
+        <hr style="border-color: #1a1c29; margin: 12px 0;">
+
+        <!-- История оплаченных 5-значных заказов -->
+        <h4>📦 История оплаченных заказов:</h4>
+        <div id="adminOrdersList" class="admin-orders-list"></div>
+    </div>
+
+    <!-- Блок нижних кнопок меню (Сетка клавиатуры) -->
+    <div class="keyboard-container" id="keyboardContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
