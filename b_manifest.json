@@ -6,11 +6,6 @@
   "author": "PDtbxHoMvkxT2QzogMN67LjGc1xpuEsrrZ",
   "permissions": ["account", "notifications", "messaging", "payment", "sign", "camera", "gallery"]
 }
-    "account",
-    "payment",
-    "chat",
-    "messaging"
-  ],
   "icons": [
     {
       "src": "b_icon.png",
