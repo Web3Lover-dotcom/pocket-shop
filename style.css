@@ -1,308 +1,64 @@
-/* ОБЩИЕ СТИЛИ СИСТЕМЫ */
-body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #050508; /* Глубокий космический черный */
-    color: #ffffff;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
-}
-
-/* ШАПКА "БОТА" */
-.bot-header {
-    background-color: #0c0d14;
-    padding: 12px 15px;
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid #1a1c29;
-    justify-content: space-between;
-}
-.bot-avatar {
-    width: 40px;
-    height: 40px;
-    background: #1f2235;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    margin-right: 12px;
-    border: 1px solid rgba(0, 242, 254, 0.3);
-}
-.bot-info {
-    flex: 1;
-}
-.bot-name { font-weight: bold; font-size: 16px; color: #ffffff; }
-.bot-status { color: #00f2fe; font-size: 13px; margin-top: 2px; text-shadow: 0 0 5px rgba(0, 242, 254, 0.3); }
-
-/* КНОПКА ШЕСТЕРЕНКИ В ШАПКЕ */
-.admin-toggle-btn {
-    background: #12131a;
-    border: 1px solid #9d4ede;
-    color: #9d4ede;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    transition: all 0.2s;
-}
-.admin-toggle-btn:hover {
-    background: #9d4ede;
-    color: #050508;
-    box-shadow: 0 0 10px #9d4ede;
-}
-
-/* ЭКРАН ЧАТА С НЕОНОВЫМ WEB3 ФОНОМ */
-.chat-container {
-    flex: 1;
-    padding: 15px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background-color: #050508;
-    /* Бесшовный фиолетово-бирюзовый Web3 неоновый паттерн */
-    background-image: url('https://freepik.com'); 
-    background-size: cover;
-    background-position: center;
-}
-
-/* ПУЗЫРИ СООБЩЕНИЙ */
-.msg {
-    max-width: 80%;
-    padding: 11px 15px;
-    border-radius: 14px;
-    font-size: 15px;
-    line-height: 1.45;
-    word-wrap: break-word;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
-}
-
-/* Пузырь Бот-администратора (Графит с бирюзовой неоновой рамкой) */
-.msg.bot {
-    background-color: #0c0d14;
-    color: #ffffff;
-    align-self: flex-start;
-    border-bottom-left-radius: 4px;
-    border: 1px solid rgba(0, 242, 254, 0.2); 
-}
-
-/* Пузырь Покупателя (Фиолетовый неон) */
-.msg.user {
-    background-color: #24113f;
-    color: #ffffff;
-    align-self: flex-end;
-    border-bottom-right-radius: 4px;
-    border: 1px solid rgba(157, 78, 221, 0.3);
-}
-
-/* КНОПКИ МЕНЮ "БОТА" ВНИЗУ */
-.keyboard-container {
-    background-color: #0c0d14;
-    padding: 12px;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    border-top: 1px solid #1a1c29;
-}
-
-.tg-btn {
-    background: #12131a;
-    color: #00f2fe; /* Бирюзовый неон */
-    border: 1px solid #00f2fe;
-    padding: 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.2s ease;
-    text-shadow: 0 0 5px rgba(0, 242, 254, 0.5);
-    box-shadow: 0 0 10px rgba(0, 242, 254, 0.1);
-}
-.tg-btn:active, .tg-btn:hover {
-    background: #00f2fe;
-    color: #050508;
-    box-shadow: 0 0 15px #00f2fe;
-    text-shadow: none;
-}
-
-/* Кнопка оплаты/подтверждения (Зеленый неон) */
-.tg-btn.pay {
-    background: #06140d;
-    color: #39ff14; /* Кислотно-зеленый неон */
-    border: 1px solid #39ff14;
-    grid-column: span 2;
-    text-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
-    box-shadow: 0 0 10px rgba(57, 255, 20, 0.1);
-}
-.tg-btn.pay:active, .tg-btn.pay:hover {
-    background: #39ff14;
-    color: #050508;
-    box-shadow: 0 0 20px #39ff14;
-    text-shadow: none;
-}
-
-/* ВЫЕЗЖАЮЩАЯ ПАНЕЛЬ АДМИНИСТРАТОРА (CRM) */
-.admin-panel {
-    background-color: #0c0d14;
-    padding: 15px;
-    border-bottom: 2px solid #9d4ede;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    max-height: 70vh;
-    overflow-y: auto;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-}
-.admin-panel h3 { margin: 0 0 5px 0; font-size: 16px; color: #9d4ede; text-transform: uppercase; letter-spacing: 0.5px; }
-.admin-panel h4 { margin: 5px 0; font-size: 13px; color: #7f91a4; }
-
-.admin-form { 
+body { 
+    margin: 0; 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    background: #0f0c1b; 
+    color: #e2e8f0; 
     display: flex; 
     flex-direction: column; 
-    gap: 8px; 
+    height: 100vh; 
+    overflow: hidden; 
 }
-.admin-panel input {
-    background-color: #12131a;
-    border: 1px solid #1a1c29;
-    color: white;
-    padding: 10px;
-    border-radius: 6px;
-    font-size: 14px;
-    transition: border 0.2s;
+#chat-container { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    overflow: hidden; 
+    position: relative; 
 }
-.admin-panel input:focus {
-    border-color: #9d4ede;
-    outline: none;
+#chat-log { 
+    flex: 1; 
+    overflow-y: auto; 
+    padding: 15px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 12px; 
 }
-
-/* БЛОК АВТОМАТИЧЕСКОЙ АНАЛИТИКИ */
-.analytics-block {
-    background: #050508;
-    border-radius: 8px;
-    padding: 12px;
-    border: 1px solid #9d4ede;
+.msg { display: flex; width: 100%; }
+.msg-bot { justify-content: flex-start; }
+.msg-user { justify-content: flex-end; }
+.msg-bubble { 
+    max-width: 75%; 
+    padding: 12px 16px; 
+    border-radius: 16px; 
+    font-size: 15px; 
+    line-height: 1.4; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2); 
 }
-.analytics-block h4 { margin: 0 0 10px 0; color: #9d4ede; font-size: 13px; font-weight: bold; }
-
-.analytics-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.msg-bot .msg-bubble { background: #1a1635; border-bottom-left-radius: 4px; border: 1px solid #3b2d75; }
+.msg-user .msg-bubble { background: #7928ca; color: #fff; border-bottom-right-radius: 4px; }
+#keyboard-container { background: #141124; padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid #251f47; }
+.btn-keyboard { background: #251f47; border: 1px solid #3b2d75; color: #fff; padding: 14px; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+.btn-keyboard:hover { background: #322960; }
+.discount-price { color: #10b981; font-weight: bold; }
+#admin-screen { 
+    display: none; 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: #0b0813; 
+    z-index: 100; 
+    overflow-y: auto; 
+    padding: 20px; 
+    box-sizing: border-box; 
 }
-.metrics-row {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-}
-.metric-card {
-    background: #12131a;
-    padding: 8px;
-    border-radius: 6px;
-    text-align: center;
-    border: 1px solid #1a1c29;
-}
-.metric-card span { font-size: 11px; color: #7f91a4; display: block; margin-bottom: 2px; }
-.metric-card b { font-size: 14px; color: #39ff14; }
-
-/* СПИСОК ДЕТАЛЬНЫХ ПРОДАЖ ПО ТОВАРУ */
-.product-sales-list {
-    background: #12131a;
-    border-radius: 6px;
-    padding: 8px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    border: 1px solid #1a1c29;
-}
-.product-sales-item {
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 1px dashed #1a1c29;
-    padding-bottom: 4px;
-    font-size: 12px;
-}
-.product-sales-item:last-child { border: none; padding-bottom: 0; }
-
-/* ТАБЛИЦА ТОВАРОВ В АДМИНКЕ */
-.admin-prod-list {
-    max-height: 130px;
-    overflow-y: auto;
-    background: #050508;
-    border-radius: 6px;
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    border: 1px solid #1a1c29;
-}
-.admin-item-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #12131a;
-    padding: 8px 10px;
-    border-radius: 4px;
-    font-size: 13px;
-}
-
-/* КРАСНАЯ КНОПКА УДАЛЕНИЯ */
-.btn-delete {
-    background: #e53935;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: bold;
-    transition: background 0.2s;
-}
-.btn-delete:hover { background: #b71c1c; }
-
-/* КНОПКА ПОЛНОЙ ОЧИСТКИ */
-.btn-danger {
-    background: transparent;
-    color: #e53935;
-    border: 1px solid #e53935;
-    padding: 10px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 4px;
-    transition: all 0.2s;
-}
-.btn-danger:hover {
-    background: rgba(229, 57, 53, 0.1);
-}
-
-/* ТАБЛИЦА С ОПЛАЧЕННЫМИ ЗАКАЗАМИ */
-.admin-orders-list {
-    max-height: 150px;
-    overflow-y: auto;
-    background: #050508;
-    border-radius: 6px;
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    border: 1px solid #39ff14;
-}
-.admin-order-row {
-    background: #12131a;
-    padding: 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    border-left: 4px solid #39ff14;
-    line-height: 1.45;
-}
-.admin-order-row b {
-    color: #39ff14;
-    font-size: 14px;
-}
+.admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3b2d75; padding-bottom: 10px; margin-bottom: 20px; }
+.admin-section { background: #141124; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #251f47; }
+.admin-input-group { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.admin-input-group input { flex: 1; min-width: 120px; background: #0f0c1b; border: 1px solid #3b2d75; color: #fff; padding: 10px; border-radius: 6px; }
+.btn-admin { background: #10b981; border: none; color: #fff; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+.btn-close { background: #ef4444; border: none; color: #fff; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+.admin-item { display: flex; justify-content: space-between; background: #1a1635; padding: 10px; border-radius: 6px; margin-bottom: 6px; align-items: center; font-size: 14px; border: 1px solid #251f47; }
+.btn-delete { background: none; border: none; cursor: pointer; font-size: 14px; }
 

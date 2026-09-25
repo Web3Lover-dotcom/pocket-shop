@@ -1,14 +1,17 @@
 {
-  "id": "pocket.shop.bot.app",
+  "id": "pocketshop-bot",
   "name": "PocketShop Bot",
-  "version": "1.0.0",
-  "description": "Децентрализованный Web3-магазин самых нужных цифровых товаров с интерфейсом Telegram-бота.",
-  "author": "PDtbxHoMvkxT2QzogMN67LjGc1xpuEsrrZ",
-  "permissions": ["account", "notifications", "messaging", "payment", "sign", "camera", "gallery"]
-}
+  "version": "2.0.0",
+  "description": "Децентрализованный чат-бот магазин с 3-уровневой реферальной системой выплат",
+  "author": "PocketShop",
+  "permissions": [
+    "account",
+    "payment",
+    "messaging"
+  ],
   "icons": [
     {
-      "src": "b_icon.png",
+      "src": "icon.png",
       "sizes": "192x192",
       "type": "image/png"
     }

@@ -1,352 +1,379 @@
+// ==========================================
+// POCKETSHOP BOT - ЧАСТЬ 1: НАСТРОЙКИ И БАЗА
+// ==========================================
+
 const bSDK = new BastyonSdk();
-let userAddress = null;
-let userName = "Аноним"; 
 
+// Главные константы
 const ADMIN_BASTYON_ADDRESS = 'PDtbxHoMvkxT2QzogMN67LjGc1xpuEsrrZ'; 
+const APP_STORAGE_KEY = 'pocket_shop_data_v2'; 
 
-let catalog = [];
-let orders = [];
-let userTree = {}; 
-let baseRefPercent = 0.10; // 10% по умолчанию
+const REF_PERCENT_L1 = 0.10;  
+const REF_PERCENT_L2 = 0.05;  
+const REF_PERCENT_L3 = 0.025; 
+const REFERRAL_DISCOUNT = 0.10; 
 
-const chatContainer = document.getElementById('chatContainer');
-const keyboardContainer = document.getElementById('keyboardContainer');
-const adminPanelBtn = document.getElementById('adminPanelBtn');
-const adminPanel = document.getElementById('adminPanel');
-const adminProductsList = document.getElementById('adminProductsList');
-const adminOrdersList = document.getElementById('adminOrdersList');
-const adminAnalytics = document.getElementById('adminAnalytics');
+// Глобальное состояние
+let appState = {
+    catalog: [],      
+    orders: [],       
+    referrals: {}     
+};
 
-function botSay(text) {
-    const msg = document.createElement('div');
-    msg.className = 'msg bot';
-    msg.innerHTML = text;
-    chatContainer.appendChild(msg);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-}
+let currentUserAddress = '';
 
-function userSay(text) {
-    const msg = document.createElement('div');
-    msg.className = 'msg user';
-    msg.innerText = text;
-    chatContainer.appendChild(msg);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-}
+// Инициализация при загрузке страницы
+window.addEventListener('DOMContentLoaded', () => {
+    initApp();
+});
 
 async function initApp() {
     try {
         await bSDK.init();
-        botSay("👋 Добро пожаловать в децентрализованный **PocketShop**!");
-        botSay("⏳ Синхронизация данных блокчейна...");
+        await bSDK.requestPermissions(['account', 'payment', 'messaging']);
 
-        if (!(await requestRequiredPermissions())) return;
+        const userAccount = await bSDK.getAccount();
+        currentUserAddress = userAccount.address;
 
-        const account = await bSDK.get.account();
-        userAddress = account.address;
-        userName = account.name || account.address.substring(0, 8) + "...";
+        await loadAppState();
+        await checkReferralLink();
 
-        // Проверка прав администратора
-        if (userAddress.toLowerCase() === ADMIN_BASTYON_ADDRESS.toLowerCase()) {
-            adminPanelBtn.style.display = 'block';
-            document.getElementById('botStatus').innerText = 'Режим: Administrator 👑';
-        }
-
-        await loadDataFromStorage();
-        await processReferralSignup();
-
-        showMainMenu();
-    } catch (e) { botSay("❌ Ошибка запуска."); }
+        startBotInterface();
+    } catch (error) {
+        console.error("Ошибка старта:", error);
+        showCriticalError();
+    }
 }
 
-async function requestRequiredPermissions() {
-    const permissions = ['account', 'payment', 'chat', 'messaging'];
+async function loadAppState() {
     try {
-        const check = await bSDK.permissions.check({ permissions });
-        if (!check.account || !check.payment || !check.chat || !check.messaging) {
-            const req = await bSDK.permissions.request({ permissions });
-            return req.account && req.payment && req.chat && req.messaging;
+        const storedData = await bSDK.storage.get({ key: APP_STORAGE_KEY });
+        if (storedData && storedData.value) {
+            const parsed = JSON.parse(storedData.value);
+            appState.catalog = parsed.catalog || [];
+            appState.orders = parsed.orders || [];
+            appState.referrals = parsed.referrals || {};
         }
-        return true;
-    } catch (e) { return false; }
+    } catch (e) {
+        console.warn("База данных пуста или создается впервые.");
+    }
 }
 
-async function loadDataFromStorage() {
+async function saveAppState() {
     try {
-        const catData = await bSDK.storage.get({ key: 'shop_catalog' });
-        catalog = catData && catData.value ? JSON.parse(catData.value) : [];
-
-        const ordData = await bSDK.storage.get({ key: 'shop_orders' });
-        orders = ordData && ordData.value ? JSON.parse(ordData.value) : [];
-
-        const treeData = await bSDK.storage.get({ key: 'shop_users_tree' });
-        userTree = treeData && treeData.value ? JSON.parse(treeData.value) : {};
-
-        const settingsData = await bSDK.storage.get({ key: 'shop_settings' });
-        if (settingsData && settingsData.value) {
-            const settings = JSON.parse(settingsData.value);
-            baseRefPercent = settings.baseRefPercent || 0.10;
-        }
-        document.getElementById('refPercentInput').value = (baseRefPercent * 100).toFixed(0);
-    } catch (e) { console.error("Ошибка загрузки хранилища", e); }
+        await bSDK.storage.set({
+            key: APP_STORAGE_KEY,
+            value: JSON.stringify(appState)
+        });
+    } catch (error) {
+        console.error("Ошибка сохранения данных:", error);
+    }
 }
 
-async function processReferralSignup() {
+async function registerReferral(insideUser, referer) {
+    if (insideUser === referer) return;
+    await loadAppState();
+
+    if (!appState.referrals[insideUser]) {
+        appState.referrals[insideUser] = referer;
+        await saveAppState();
+        
+        try {
+            await bSDK.sendMessage({
+                to: referer,
+                message: `🎉 По вашей ссылке зарегистрирован новый реферал!`
+            });
+        } catch (e) { console.log(e); }
+    }
+}
+
+async function checkReferralLink() {
     const urlParams = new URLSearchParams(window.location.search);
-    const ref = urlParams.get('ref');
-    
-    if (ref && ref.toLowerCase() !== userAddress.toLowerCase()) {
-        if (!userTree[userAddress]) {
-            userTree[userAddress] = ref;
-            try {
-                await bSDK.storage.set({ key: 'shop_users_tree', value: JSON.stringify(userTree) });
-                await bSDK.chat.send({
-                    address: ref,
-                    message: `👋 Привет! Пользователь ${userName} (${userAddress}) только что успешно зарегистрировался по вашей реферальной ссылке в PocketShop!`
-                });
-                botSay(`🎉 Вы зашли по реферальной ссылке! Вам активирована **скидка 10%** на все покупки!`);
-            } catch (e) { console.error("Ошибка уведомления реферала", e); }
-        }
+    const referer = urlParams.get('ref');
+    if (referer && referer !== currentUserAddress) {
+        await registerReferral(currentUserAddress, referer);
     }
 }
+// ==========================================
+// POCKETSHOP BOT - ЧАСТЬ 2: БЛОКЧЕЙН И ЧАТ
+// ==========================================
 
-async function saveRefPercentFromAdmin() {
-    const pctInput = document.getElementById('refPercentInput').value;
-    if (!pctInput || pctInput < 0 || pctInput > 50) return alert("Введите корректный процент от 0 до 50");
-    baseRefPercent = parseFloat(pctInput) / 100;
+// Проверка транзакции через RPC-ноду
+async function verifyBlockchainTransaction(txid, expectedAmount) {
     try {
-        await bSDK.storage.set({ key: 'shop_settings', value: JSON.stringify({ baseRefPercent: baseRefPercent }) });
-        botSay(`⚙️ Администратор изменил базовый реф. процент на **${pctInput}%**.`);
-        toggleAdminPanel();
-    } catch (e) { alert("Ошибка настроек."); }
+        const txData = await bSDK.rpc('getrawtransaction', [txid, 1]);
+        if (!txData || !txData.vout) return false;
+
+        let totalSentToAdmin = 0;
+        let isTargetFound = false;
+
+        for (let output of txData.vout) {
+            if (output.scriptPubKey && output.scriptPubKey.addresses) {
+                if (output.scriptPubKey.addresses.includes(ADMIN_BASTYON_ADDRESS)) {
+                    totalSentToAdmin += output.value;
+                    isTargetFound = true;
+                }
+            }
+        }
+
+        if (isTargetFound && Math.abs(totalSentToAdmin - expectedAmount) < 0.0001) {
+            return true; 
+        }
+        return false;
+    } catch (error) {
+        console.error("Ошибка RPC ноды:", error);
+        return false;
+    }
 }
 
-function calculateAnalytics() {
-    let totalRevenue = 0; let totalOrders = orders.length; let uniqueBuyers = new Set(); let productStats = {};
-    catalog.forEach(item => { productStats[item.name] = { count: 0, revenue: 0 }; });
-    orders.forEach(order => {
-        totalRevenue += order.price; uniqueBuyers.add(order.buyer);
-        if (!productStats[order.productName]) { productStats[order.productName] = { count: 0, revenue: 0 }; }
-        productStats[order.productName].count += 1; productStats[order.productName].revenue += order.price;
+// Интерфейс чат-бота
+function botSay(text) {
+    const chatLog = document.getElementById('chat-log');
+    if (!chatLog) return;
+    const msg = document.createElement('div');
+    msg.className = 'msg msg-bot';
+    msg.innerHTML = `<div class="msg-bubble">${text}</div>`;
+    chatLog.appendChild(msg);
+    chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+function userSay(text) {
+    const chatLog = document.getElementById('chat-log');
+    if (!chatLog) return;
+    const msg = document.createElement('div');
+    msg.className = 'msg msg-user';
+    msg.innerHTML = `<div class="msg-bubble">${text}</div>`;
+    chatLog.appendChild(msg);
+    chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+function renderKeyboard(buttons) {
+    const keyboardContainer = document.getElementById('keyboard-container');
+    if (!keyboardContainer) return;
+    keyboardContainer.innerHTML = '';
+    buttons.forEach(btn => {
+        const b = document.createElement('button');
+        b.className = 'btn-keyboard';
+        b.innerText = btn.text;
+        b.onclick = () => {
+            userSay(btn.text);
+            btn.action();
+        };
+        keyboardContainer.appendChild(b);
     });
-    let html = `
-        <div class="metrics-row">
-            <div class="metric-card"><span>Общая выручка</span><b>${totalRevenue.toFixed(2)} PKOIN</b></div>
-            <div class="metric-card"><span>Всего продаж</span><b>${totalOrders} шт.</b></div>
-        </div>
-        <div class="metrics-row">
-            <div class="metric-card"><span>Уникальных клиентов</span><b>${uniqueBuyers.size}</b></div>
-            <div class="metric-card"><span>Реф. % (L1/L2/L3)</span><b> ${(baseRefPercent*100).toFixed(0)}% / ${(baseRefPercent*50).toFixed(1)}% / ${(baseRefPercent*25).toFixed(1)}%</b></div>
-        </div>
-        <div style="margin-top: 5px; font-weight: bold; color: #7f91a4; font-size:12px;">📊 Продажи по товарам:</div>
-        <div class="product-sales-list">
-    `;
-    for (const [prodName, stat] of Object.entries(productStats)) {
-        html += `<div class="product-sales-item"><span>${prodName}</span><span><b>${stat.count} шт.</b> (${stat.revenue.toFixed(1)} PKOIN)</span></div>`;
+}
+
+function startBotInterface() {
+    botSay(`👋 Добро пожаловать в PocketShop Bot!<br>Я помогу вам совершить безопасную покупку товаров за PKOIN.`);
+    showMainMenu();
+}
+
+function showMainMenu() {
+    closeAdminUI();
+    const menu = [
+        { text: '🛒 Каталог товаров', action: showCatalog },
+        { text: '🤝 Реф. программа', action: showReferralMenu },
+        { text: '💰 Мой Баланс', action: showBalance },
+        { text: '💬 Написать админу', action: openAdminChat }
+    ];
+    if (currentUserAddress === ADMIN_BASTYON_ADDRESS) {
+        menu.push({ text: '⚙️ Админка', action: openAdminPanel });
     }
-    html += `</div>`; adminAnalytics.innerHTML = html;
+    renderKeyboard(menu);
+}
+// ==========================================
+// POCKETSHOP BOT - ЧАСТЬ 3: ЛОГИКА МАГАЗИНА
+// ==========================================
+
+async function showCatalog() {
+    await loadAppState();
+    if (appState.catalog.length === 0) {
+        botSay("📦 В данный момент каталог товаров пуст.");
+        showMainMenu();
+        return;
+    }
+
+    botSay("📋 Список доступных товаров:");
+    const hasReferer = !!appState.referrals[currentUserAddress];
+
+    appState.catalog.forEach((item, index) => {
+        if (item.quantity <= 0) return;
+
+        let priceText = `${item.price} PKOIN`;
+        let finalPrice = item.price;
+
+        if (hasReferer) {
+            finalPrice = (item.price * (1 - REFERRAL_DISCOUNT)).toFixed(4);
+            priceText = `<s>${item.price} PKOIN</s> <span class="discount-price">${finalPrice} PKOIN (-10% 🔥)</span>`;
+        }
+
+        botSay(`<b>${item.name}</b><br>Цена: ${priceText}<br>Остаток: ${item.quantity} шт.`);
+        renderKeyboard([
+            { text: `Купить: ${item.name}`, action: () => processPurchase(index, finalPrice) },
+            { text: `⬅️ Назад в меню`, action: showMainMenu }
+        ]);
+    });
+}
+
+async function processPurchase(productIndex, finalPrice) {
+    const item = appState.catalog[productIndex];
+    botSay(`⏳ Инициирую оплату для "${item.name}"...`);
+
+    try {
+        const tx = await bSDK.payment({
+            address: ADMIN_BASTYON_ADDRESS,
+            amount: parseFloat(finalPrice),
+            description: `Покупка: ${item.name}`
+        });
+
+        if (tx && tx.id) {
+            botSay(`🔗 Проверяю платеж в блокчейне...`);
+            const isLegit = await verifyBlockchainTransaction(tx.id, parseFloat(finalPrice));
+            
+            if (isLegit) {
+                await loadAppState();
+                appState.catalog[productIndex].quantity -= 1;
+                
+                const orderId = Math.floor(10000 + Math.random() * 90000);
+                appState.orders.push({
+                    id: orderId,
+                    buyer: currentUserAddress,
+                    productId: item.id,
+                    productName: item.name,
+                    txid: tx.id,
+                    status: 'paid'
+                });
+                await saveAppState();
+
+                botSay(`🎉 <b>Оплата успешно подтверждена!</b><br>🔑 Код заказа: <b>${orderId}</b><br>Передайте его админу.`);
+                await sendReferralAlerts(currentUserAddress, item.price);
+            } else {
+                botSay(`❌ <b>Ошибка валидации!</b> Нода блокчейна не подтвердила получение платежа.`);
+            }
+        } else {
+            botSay(`❌ Транзакция отменена.`);
+        }
+    } catch (error) {
+        botSay(`❌ Ошибка платежа.`);
+    }
+    showMainMenu();
+}
+
+function findReferralChain(buyerAddress) {
+    const l1 = appState.referrals[buyerAddress] || null;
+    const l2 = l1 ? (appState.referrals[l1] || null) : null;
+    const l3 = l2 ? (appState.referrals[l2] || null) : null;
+    return { l1, l2, l3 };
+}
+
+async function sendReferralAlerts(buyerAddress, itemPrice) {
+    const chain = findReferralChain(buyerAddress);
+    const shortName = (addr) => `${addr.substr(0, 4)}...${addr.substr(-4)}`;
+    const buyerName = shortName(buyerAddress);
+
+    const sendAlert = async (to, percent, lvl) => {
+        if (!to) return;
+        const reward = (itemPrice * percent).toFixed(4);
+        try {
+            await bSDK.sendMessage({
+                to: to,
+                message: `💰 Ваш реферал ${lvl}-го уровня (${buyerName}) совершил покупку! Вам начислено бонусных: ${reward} PKOIN.`
+            });
+        } catch (e) {}
+    };
+
+    await sendAlert(chain.l1, REF_PERCENT_L1, 1);
+    await sendAlert(chain.l2, REF_PERCENT_L2, 2);
+    await sendAlert(chain.l3, REF_PERCENT_L3, 3);
+}
+
+function showReferralMenu() {
+    const refLink = `https://bastyon.com{currentUserAddress}`;
+    botSay(`🤝 <b>Партнерская программа (3 уровня)</b><br>Вы получаете: L1 - 10% | L2 - 5% | L3 - 2.5%<br>🔥 Друзья получают 10% скидку!<br>🔗 Ссылка:<br><code>${refLink}</code>`);
+    showMainMenu();
+}
+
+async function showBalance() {
+    try {
+        const userAccount = await bSDK.getAccount();
+        botSay(`👛 Кошелек: <code>${userAccount.address}</code><br>💰 Баланс: <b>${userAccount.balance} PKOIN</b>`);
+    } catch (e) { botSay(`❌ Ошибка баланса.`); }
+    showMainMenu();
+}
+
+function openAdminChat() {
+    try {
+        bSDK.openChat(ADMIN_BASTYON_ADDRESS);
+        botSay("📱 Открываю личные сообщения с администратором...");
+    } catch (e) {
+        console.error("Не удалось открыть чат:", e);
+        botSay(`❌ Не удалось открыть чат автоматически. Напишите админу вручную на адрес: <code>${ADMIN_BASTYON_ADDRESS}</code>`);
+    }
+    showMainMenu();
+}
+
+function showCriticalError() {
+    botSay("❌ Критическая ошибка инициализации Bastyon SDK.");
+}
+
+// Логика Панели Администратора
+function openAdminPanel() {
+    if (currentUserAddress !== ADMIN_BASTYON_ADDRESS) return;
+    document.getElementById('admin-screen').style.display = 'block';
+    renderAdminData();
+}
+
+function closeAdminUI() {
+    document.getElementById('admin-screen').style.display = 'none';
 }
 
 function renderAdminData() {
-    calculateAnalytics();
-    adminProductsList.innerHTML = '';
-    catalog.forEach((item, index) => {
-        const row = document.createElement('div'); row.className = 'admin-item-row';
-        row.innerHTML = `<span>${item.name} — <b>${item.price} PKOIN</b> (${item.quantity} шт)</span><button class="btn-delete" onclick="deleteProduct(${index})">❌ Удалить</button>`;
-        adminProductsList.appendChild(row);
+    const catalogList = document.getElementById('admin-catalog-list');
+    catalogList.innerHTML = '';
+    appState.catalog.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'admin-item';
+        div.innerHTML = `<span>${item.name} (${item.price} PKOIN) - ${item.quantity}шт</span> 
+                         <button onclick="deleteProduct(${index})" class="btn-delete">❌</button>`;
+        catalogList.appendChild(div);
     });
-    adminOrdersList.innerHTML = '';
-    if (orders.length === 0) { adminOrdersList.innerHTML = '<div style="text-align:center; font-size:12px;">Нет заказов</div>'; } 
-    else {
-        [...orders].reverse().forEach(ord => {
-            const row = document.createElement('div'); row.className = 'admin-order-row';
-            row.innerHTML = `📌 Код: <b>${ord.id}</b> | Статус: <span style="color:#31b54a;">● ОПЛАЧЕН</span><br>🛒 ${ord.productName} (${ord.price} PKOIN)<br>👤 Покупатель: ${ord.buyerName || 'Аноним'} (<small>${ord.buyer}</small>)${ord.levelsPaid ? `<br>👥 Выплаты рефералам: ${ord.levelsPaid}` : ''}`;
-            adminOrdersList.appendChild(row);
-        });
+
+    const ordersList = document.getElementById('admin-orders-list');
+    ordersList.innerHTML = '';
+    appState.orders.forEach(order => {
+        const div = document.createElement('div');
+        div.className = 'admin-item';
+        div.innerHTML = `<b>Код: ${order.id}</b> | Покупатель: ${order.buyer.substr(0,6)}... | Товар: ${order.productName}`;
+        ordersList.appendChild(div);
+    });
+}
+
+async function addProduct() {
+    const name = document.getElementById('p-name').value;
+    const price = parseFloat(document.getElementById('p-price').value);
+    const qty = parseInt(document.getElementById('p-qty').value);
+
+    if (!name || isNaN(price) || isNaN(qty)) {
+        alert("Заполните все поля корректно!");
+        return;
     }
+
+    await loadAppState();
+    appState.catalog.push({ id: Date.now().toString(), name, price, quantity: qty });
+    await saveAppState();
+    
+    renderAdminData();
+    document.getElementById('p-name').value = '';
+    document.getElementById('p-price').value = '';
+    document.getElementById('p-qty').value = '';
 }
 
-function toggleAdminPanel() {
-    if (adminPanel.style.display === 'none') { renderAdminData(); adminPanel.style.display = 'flex'; } 
-    else { adminPanel.style.display = 'none'; }
-}
-
-async function addNewProductFromAdmin() {
-    const name = document.getElementById('prodName').value; const price = document.getElementById('prodPrice').value; const qty = document.getElementById('prodQty').value;
-    if (!name || !price || !qty) return alert("Заполните поля!");
-    catalog.push({ name, price: parseFloat(price), quantity: parseInt(qty) });
-    await saveData('shop_catalog', catalog, `✨ Добавлен товар: **${name}**.`);
-    document.getElementById('prodName').value = '';
-    document.getElementById('prodPrice').value = '';
-    document.getElementById('prodQty').value = '';
-}
 async function deleteProduct(index) {
-    const name = catalog[index].name;
-    if (confirm(`Удалить "${name}"?`)) { catalog.splice(index, 1); await saveData('shop_catalog', catalog, `🗑️ Удален: **${name}**`); }
-}
-async function clearAllCatalog() {
-    if (confirm("Очистить каталог?")) { catalog = []; await saveData('shop_catalog', catalog, `🧹 Очищено.`); }
-}
-async function saveData(key, dataArray, botMsg) {
-    try { await bSDK.storage.set({ key: key, value: JSON.stringify(dataArray) }); if (botMsg) botSay(botMsg); renderAdminData(); showMainMenu(); } catch (e) { alert("Ошибка блокчейна."); }
-}
-
-function showMainMenu() {
-    keyboardContainer.innerHTML = `
-        <button class="tg-btn" onclick="checkBalance()">💰 Мой Баланс</button>
-        <button class="tg-btn" onclick="showCatalog()">🛒 Каталог товаров</button>
-        <button class="tg-btn" onclick="showReferralMenu()">👥 Реф. программа</button>
-        <button class="tg-btn" onclick="openAdminChat()">✍️ Обратная связь</button>
-        <button class="tg-btn" style="grid-column: span 2;" onclick="sendDonate()">❤️ Донат автору</button>
-    `;
-}
-
-function showReferralMenu() {
-    /* ========================================================
-   ФРОНТЕНД ПОЛЬЗОВАТЕЛЯ И КАСКАДНЫЙ Web3 СПЛИТ-ПЛАТЕЖ
-   ======================================================== */
-
-function showMainMenu() {
-    keyboardContainer.innerHTML = 
-        '<button class="tg-btn" onclick="checkBalance()">💰 Мой Баланс</button>' +
-        '<button class="tg-btn" onclick="showCatalog()">🛒 Каталог товаров</button>' +
-        '<button class="tg-btn" onclick="showReferralMenu()">👥 Реф. программа</button>' +
-        '<button class="tg-btn" onclick="openAdminChat()">✍️ Обратная связь</button>' +
-        '<button class="tg-btn" style="grid-column: span 2;" onclick="sendDonate()">❤️ Донат автору</button>';
-}
-
-function showReferralMenu() {
-    userSay("👥 Открыть реферальную программу");
-    var baseAppUrl = window.location.href.split('?')[0];
-    var personalRefUrl = baseAppUrl + "?ref=" + userAddress;
-    
-    botSay("🤝 **3-Уровневая Реферальная программа**<br><br>" +
-           "Приглашайте друзей по своей ссылке и получайте автоматический доход в PKOIN на 3 поколения в глубину:<br>" +
-           "• **1 уровень (прямой друг):** " + (baseRefPercent * 100).toFixed(0) + "% от его покупок<br>" +
-           "• **2 уровень (друг друга):** " + (baseRefPercent * 50).toFixed(1) + "% от его покупок<br>" +
-           "• **3 уровень (следующий круг):** " + (baseRefPercent * 25).toFixed(1) + "% от его покупок<br><br>" +
-           "🎁 *Каждый, кто перейдет по вашей ссылке, мгновенно получит **скидку 10%** на все товары магазина!*<br><br>" +
-           "🔗 **Ваша реф-ссылка для копирования:**<br>" +
-           "<code style='background:#101921; padding:4px; display:block; word-break:break-all; border-radius:4px; margin-top:5px; color:#4ba3e3;'>" + personalRefUrl + "</code>");
-    showMainMenu();
-}
-
-function showCatalog() {
-    userSay("🛒 Открыть каталог");
-    if (catalog.length === 0) { 
-        botSay("В магазине нет товаров."); 
-        showMainMenu(); 
-        return; 
+    if (confirm("Удалить этот товар?")) {
+        await loadAppState();
+        appState.catalog.splice(index, 1);
+        await saveAppState();
+        renderAdminData();
     }
-    
-    var hasReferrer = userTree[userAddress] ? true : false;
-    botSay(hasReferrer ? "🔥 Для вас действуют **цены со скидкой 10%** по реферальной программе:" : "Выберите товар из каталога:");
-    
-    var html = '';
-    catalog.forEach(function(item, index) {
-        var finalPrice = hasReferrer ? item.price * 0.9 : item.price;
-        if (item.quantity > 0) { 
-            var discountLabel = hasReferrer ? " <span style='text-decoration:line-through; font-size:11px; color:#e53935;'>" + item.price + "</span>" : "";
-            html += '<button class="tg-btn" onclick="buyItem(' + index + ')">' + item.name + '<br>💰 ' + finalPrice.toFixed(2) + ' PKOIN' + discountLabel + ' (Осталось: ' + item.quantity + ' шт)</button>'; 
-        } else { 
-            html += '<button class="tg-btn" style="opacity:0.5; color:#7f91a4;" disabled>' + item.name + '<br>❌ Нет в наличии</button>'; 
-        }
-    });
-    html += '<button class="tg-btn" onclick="showMainMenu()">⬅️ Назад в меню</button>';
-    keyboardContainer.innerHTML = html;
 }
-
-async function buyItem(index) {
-    const item = catalog[index];
-    if (item.quantity <= 0) return botSay("😔 Товар закончился.");
-    userSay("Купить " + item.name);
-
-    let u1 = userTree[userAddress] || null;
-    let u2 = u1 ? (userTree[u1] || null) : null;
-    let u3 = u2 ? (userTree[u2] || null) : null;
-
-    let actualPrice = u1 ? item.price * 0.9 : item.price;
-
-    let p1 = u1 ? actualPrice * baseRefPercent : 0;
-    let p2 = u2 ? actualPrice * (baseRefPercent / 2) : 0;
-    let p3 = u3 ? actualPrice * (baseRefPercent / 4) : 0;
-    let adminShare = actualPrice - (p1 + p2 + p3);
-
-    botSay("Ожидаю оплату **" + actualPrice.toFixed(2) + " PKOIN** за товар **" + item.name + "**...");
-
-    try {
-        let tx = await bSDK.payment({
-            address: ADMIN_BASTYON_ADDRESS,
-            amount: adminShare,
-            description: "Покупка: " + item.name + " (Основная доля)"
-        });
-
-        let levelsPaid = [];
-
-        if (tx && tx.valid) {
-            if (u1 && p1 > 0) {
-                try { 
-                    await bSDK.payment({ address: u1, amount: p1, description: "Реф-бонус L1: " + item.name }); 
-                    levelsPaid.push("L1");
-                    await bSDK.chat.send({ address: u1, message: "💰 **Новая продажа!** Ваш реферал 1-го уровня **" + userName + "** купил \"" + item.name + "\". Вам начислен бонус: **" + p1.toFixed(2) + " PKOIN**!" });
-                } catch(e){}
-            }
-            if (u2 && p2 > 0) {
-                try { 
-                    await bSDK.payment({ address: u2, amount: p2, description: "Реф-бонус L2: " + item.name }); 
-                    levelsPaid.push("L2");
-                    await bSDK.chat.send({ address: u2, message: "💰 **Новая продажа!** Реферал 2-го уровня **" + userName + "** совершил покупку \"" + item.name + "\". Вам начислен бонус: **" + p2.toFixed(2) + " PKOIN**!" });
-                } catch(e){}
-            }
-            if (u3 && p3 > 0) {
-                try { 
-                    await bSDK.payment({ address: u3, amount: p3, description: "Реф-бонус L3: " + item.name }); 
-                    levelsPaid.push("L3");
-                    await bSDK.chat.send({ address: u3, message: "💰 **Новая продажа!** Реферал 3-го уровня **" + userName + "** совершил покупку \"" + item.name + "\". Вам начислен бонус: **" + p3.toFixed(2) + " PKOIN**!" });
-                } catch(e){}
-            }
-
-            catalog[index].quantity -= 1;
-            await bSDK.storage.set({ key: 'shop_catalog', value: JSON.stringify(catalog) });
-
-            const orderId = Math.floor(10000 + Math.random() * 90000).toString();
-
-            orders.push({
-                id: orderId, productName: item.name, price: actualPrice, buyer: userAddress, buyerName: userName, txid: tx.txid, status: "Оплачен",
-                levelsPaid: levelsPaid.length > 0 ? levelsPaid.join(", ") : "нет (соло)"
-            });
-            await bSDK.storage.set({ key: 'shop_orders', value: JSON.stringify(orders) });
-
-            botSay("🎉 **ОПЛАТА УСПЕШНО ПРОШЛА!**<br><br>" +
-                   "📦 Номер вашего заказа: <b style='color:#31b54a; font-size:18px;'>" + orderId + "</b><br><br>" +
-                   "👉 Откройте чат с админом по кнопке **«✍️ Обратная связь»**, напишите ему код заказа и получите ваш товар!");
-        }
-    } catch (err) { botSay("❌ Оплата отменена."); }
-    showMainMenu();
-}
-
-async function checkBalance() {
-    userSay("💰 Проверить баланс");
-    try {
-        const account = await bSDK.get.account(); 
-        const balanceInfo = await bSDK.get.balance();
-        botSay("👤 **Кошелек:** <br>" + account.address + "<br><br>💵 **Баланс:** " + balanceInfo.balance + " PKOIN");
-    } catch (e) { botSay("❌ Ошибка."); } 
-    showMainMenu();
-}
-
-async function openAdminChat() {
-    userSay("✍️ Обратная связь"); 
-    botSay("⏳ Открываю чат...");
-    try { await bSDK.chat.openOrCreateRoom({ address: ADMIN_BASTYON_ADDRESS }); } catch (e) { botSay("❌ Ошибка."); } 
-    showMainMenu();
-}
-
-async function sendDonate() {
-    userSay("❤️ Донат");
-    try { await bSDK.payment({ address: ADMIN_BASTYON_ADDRESS, amount: 0.5, description: "Донат" }); botSay("😇 Спасибо!"); } catch(e) { botSay("❌ Отменено."); } 
-    showMainMenu();
-}
-
-initApp();
-
 
